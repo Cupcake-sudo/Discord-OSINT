@@ -1,4 +1,5 @@
-const fs   = require('fs');
+
+<const fs   = require('fs');
 const path = require('path');
 
 const {
@@ -21,6 +22,16 @@ const {
   writeMentionsOutput, writeMessagesOutput,
   buildMessageRows, buildFilesOnlyRows, buildMentionRows,
 } = require('./output');
+
+function formatElapsed(ms) {
+  const totalSeconds = ms / 1000;
+  if (totalSeconds < 60) {
+    return totalSeconds.toFixed(1) + 's';
+  }
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = (totalSeconds % 60).toFixed(0).padStart(2, '0');
+  return minutes + 'm ' + seconds + 's';
+}
 
 async function main() {
   clearScreen();
@@ -62,6 +73,8 @@ async function main() {
   const summary     = [];
 
   statusLog('');
+
+  const startTime = Date.now();
 
   for (const guild of guilds) {
     const name = stripEmoji(guild.name) || guild.id;
@@ -107,6 +120,8 @@ async function main() {
     await delay(SEARCH_DELAY_MS);
   }
 
+  const elapsed = formatElapsed(Date.now() - startTime);
+
   const finalUsername = resolvedUsername || TARGET_USER_ID;
   const safeUser      = sanitizeName(finalUsername.split('#')[0]);
 
@@ -136,7 +151,7 @@ async function main() {
 
   if (MENTION_ONLY_MODE) {
     const mentioners = writeMentionsOutput(outDir, { finalUsername, allMentions, serversWithMsgs, totalMentions });
-    const rows       = buildMentionRows(mentioners, serversWithMsgs, totalMentions);
+    const rows       = buildMentionRows(mentioners, serversWithMsgs, totalMentions, elapsed);
     setCatMood('happy');
     stopHeader();
     await printResults(rows, './' + outDir + '/');
@@ -146,12 +161,12 @@ async function main() {
 
   if (SAVE_MESSAGES) {
     writeMessagesOutput(outDir, filesDir, { finalUsername, allMessages, serversWithMsgs, totalFiles });
-    const rows = buildMessageRows(allMessages, serversWithMsgs, totalFiles);
+    const rows = buildMessageRows(allMessages, serversWithMsgs, totalFiles, elapsed);
     setCatMood('happy');
     stopHeader();
     await printResults(rows, './' + outDir + '/');
   } else {
-    const rows = buildFilesOnlyRows(summary, totalFiles);
+    const rows = buildFilesOnlyRows(summary, totalFiles, elapsed);
     setCatMood('happy');
     stopHeader();
     await printResults(rows, './' + outDir + '/');
@@ -169,4 +184,5 @@ main().catch((err) => {
   stopHeader();
   console.error('\n  ✗  fatal error: ' + err.message);
   process.exit(1);
-});
+});>
+
