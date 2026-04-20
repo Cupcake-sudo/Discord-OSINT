@@ -34,23 +34,32 @@ function lockCatBelowBanner() {
 function setCatMood(mood) {
   if (CAT_FACES[mood]) {
     _catMood  = mood;
-    _catFrame = 0; // reset cycle on mood change so it feels snappy
+    _catFrame = 0;
   }
 }
 
 function updateHeader() {
   if (_catLine === null) return;
-  const faces = CAT_FACES[_catMood] || CAT_FACES.idle;
-  const c     = faces[_catFrame % faces.length];
-  const col   = BANNER_COLOURS[_catFrame % BANNER_COLOURS.length];
-  // Truncate status so it never wraps onto a second line
-  const maxMsgLen  = Math.max(10, (process.stdout.columns || 80) - 20);
-  const safeMsg    = String(_statusMsg).replace(/[\r\n]/g, ' ').slice(0, maxMsgLen);
+  const faces  = CAT_FACES[_catMood] || CAT_FACES.idle;
+  const c      = faces[_catFrame % faces.length];
+  const col    = BANNER_COLOURS[_catFrame % BANNER_COLOURS.length];
+
+  const maxMsgLen = Math.max(10, (process.stdout.columns || 80) - 20);
+  const safeMsg   = String(_statusMsg).replace(/[\r\n]/g, ' ').slice(0, maxMsgLen);
+
+  // box chars
+  const inner     = '  ' + c + '  │  ' + safeMsg;
+  const innerLen  = c.replace(/\x1b\[[^m]*m/g, '').length + safeMsg.length + 7;
+  const boxWidth  = Math.min(innerLen + 2, (process.stdout.columns || 80) - 2);
+  const top       = '  ╭' + '─'.repeat(boxWidth) + '╮';
+  const bottom    = '  ╰' + '─'.repeat(boxWidth) + '╯';
+  const mid       = '  │ ' + col + c + RESET + '  │  ' + col + safeMsg + RESET;
+
   process.stdout.write(
     SAVE_CURSOR +
-    moveCursor(_catLine, 1) +
-    CLEAR_LINE +
-    '  ' + col + c + RESET + '  ' + col + safeMsg + RESET +
+    moveCursor(_catLine, 1)     + CLEAR_LINE + col + top    + RESET + '\n' +
+    moveCursor(_catLine + 1, 1) + CLEAR_LINE + mid                        + '\n' +
+    moveCursor(_catLine + 2, 1) + CLEAR_LINE + col + bottom + RESET +
     RESTORE_CURSOR
   );
   _catFrame++;
@@ -150,12 +159,12 @@ async function printBanner() {
     { text: '/ / / // / \\__ \\/ /   / / / / /_/ / / / /',                                 charDelay: 3 },
     { text: '/_____/___//____/\\____/\\____/_/ |_/_____/  ',                                charDelay: 3 },
     { text: '',                                                                               charDelay: 0 },
-    { text: '        ____  _____ _____   ________',                                     charDelay: 3 },
-    { text: '       / __ \\/ ___//  _/ | / /_  __/',                                   charDelay: 3 },
-    { text: '      / / / /\\__ \\ / //  |/ / / /   ',                                 charDelay: 3 },
-    { text: '     / /_/ /___/ // // /|  / / /    ',                                    charDelay: 3 },
-    { text: '     \\____//____/___/_/ |_/ /_/    v2.0                  -By Cupcake',    charDelay: 3 },
-        { text: '',                                                                               charDelay: 0 },
+    { text: '        ____  _____ _____   ________',                                          charDelay: 3 },
+    { text: '       / __ \\/ ___//  _/ | / /_  __/',                                        charDelay: 3 },
+    { text: '      / / / /\\__ \\ / //  |/ / / /   ',                                       charDelay: 3 },
+    { text: '     / /_/ /___/ // // /|  / / /    ',                                         charDelay: 3 },
+    { text: '     \\____//____/___/_/ |_/ /_/    v2.0                  -By Cupcake',         charDelay: 3 },
+    { text: '',                                                                               charDelay: 0 },
   ];
 
   for (const { text, charDelay } of bannerLines) {
