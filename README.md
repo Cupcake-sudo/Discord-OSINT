@@ -4,7 +4,7 @@
 
 ![Node.js](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen) ![License](https://img.shields.io/github/license/Cupcake-sudo/Discord-OSINT) ![JavaScript](https://img.shields.io/badge/language-JavaScript-yellow)
 
-A command-line tool that searches shared Discord servers for messages, files, and mentions tied to a specific user ID. Based around a kitty named Nyx who tells you everything that is happening.
+A command-line tool that searches between your Discord servers for messages, files, and mentions tied to a specific user ID. Based around a kitty pet named Nyx who tells you everything that is happening.
 
 > ⚠️ **Disclaimer:** This tool is intended for use on accounts you own or have explicit permission to investigate. Use responsibly and in accordance with Discord’s Terms of Service.
 
