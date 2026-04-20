@@ -9,7 +9,7 @@ A command-line tool that searches shared Discord servers for messages, files, an
 
 #Collecting Files **-files (collects only files) -heatmap (shows the time where most messages are sent)**
 
-<img width="980" height="922" alt="eg" src="https://github.com/user-attachments/assets/609ec039-7ebb-4ce8-9410-27354bf7da55" />
+<img width="980" height="922" alt="2" src="https://github.com/user-attachments/assets/41d8c19e-ff8b-49ca-b569-4dedc788d96f" />
 
 
 
