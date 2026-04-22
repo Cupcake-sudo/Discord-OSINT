@@ -130,13 +130,33 @@ async function searchGuildForFiles(guildId, guildName, filesDir, onFirstAuthor, 
         setCatMood('eating');
         statusSet('chomping through ' + fileUrls.length + ' file(s)...');
         for (const f of fileUrls) {
-          const localPath = await downloadFile(f.url, filesDir);
-          if (localPath) localFiles.push({ localPath, type: f.type, originalUrl: f.url });
+          const messageContext = {
+            guildId: guildId,
+            channelId: msg.channel_id,
+            messageId: msg.id
+          };
+          const localPath = await downloadFile(f.url, filesDir, messageContext);
+          if (localPath) {
+            localFiles.push({ 
+              localPath, 
+              type: f.type, 
+              originalUrl: f.url,
+              guildId: guildId,
+              channelId: msg.channel_id,
+              messageId: msg.id
+            });
+          }
         }
         setCatMood('hunting');
       }
 
-      collected.push({ messageId: msg.id, timestamp: msg.timestamp, files: localFiles });
+      collected.push({ 
+        messageId: msg.id, 
+        timestamp: msg.timestamp, 
+        guildId: guildId,
+        channelId: msg.channel_id,
+        files: localFiles 
+      });
     }
 
     offset += messages.length;
@@ -197,8 +217,22 @@ async function searchGuildForUser(guildId, guildName, filesDir, onFirstAuthor, o
         setCatMood('eating');
         statusSet('nomming ' + fileUrls.length + ' file(s)...');
         for (const f of fileUrls) {
-          const localPath = await downloadFile(f.url, filesDir);
-          if (localPath) localFiles.push({ localPath, type: f.type, originalUrl: f.url });
+          const messageContext = {
+            guildId: guildId,
+            channelId: msg.channel_id,
+            messageId: msg.id
+          };
+          const localPath = await downloadFile(f.url, filesDir, messageContext);
+          if (localPath) {
+            localFiles.push({ 
+              localPath, 
+              type: f.type, 
+              originalUrl: f.url,
+              guildId: guildId,
+              channelId: msg.channel_id,
+              messageId: msg.id
+            });
+          }
         }
         setCatMood('hunting');
       }
@@ -220,7 +254,13 @@ async function searchGuildForUser(guildId, guildName, filesDir, onFirstAuthor, o
           type:        msg.type,
         });
       } else if (localFiles.length > 0) {
-        collected.push({ messageId: msg.id, timestamp: msg.timestamp, files: localFiles });
+        collected.push({ 
+          messageId: msg.id, 
+          timestamp: msg.timestamp, 
+          guildId: guildId,
+          channelId: msg.channel_id,
+          files: localFiles 
+        });
       }
     }
 

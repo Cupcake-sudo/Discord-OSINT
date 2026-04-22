@@ -80,6 +80,10 @@ function extractFileUrls(msg) {
   return urls;
 }
 
+function generateMessageLink(guildId, channelId, messageId) {
+  return `https://discord.com/channels/${guildId}/${channelId}/${messageId}`;
+}
+
 module.exports = {
   sanitizeName,
   stripEmoji,
@@ -91,5 +95,5 @@ module.exports = {
   formatUserTag,
   extractUsernameFromMessage,
   extractFileUrls,
+  generateMessageLink,
 };
-

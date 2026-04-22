@@ -1,7 +1,7 @@
 const fs   = require('fs');
 const path = require('path');
 const { TARGET_USER_ID, DOWNLOAD_FILES, SAVE_MESSAGES } = require('./constants');
-const { modeLabel, stripEmoji, countFileTypes, fileTypeSummaryStr } = require('./utils');
+const { modeLabel, stripEmoji, countFileTypes, fileTypeSummaryStr, generateMessageLink } = require('./utils');
 
 function writeMentionsOutput(outDir, { finalUsername, allMentions, serversWithMsgs, totalMentions }) {
   const mentionerMap = {};
@@ -105,7 +105,11 @@ function writeMessagesOutput(outDir, filesDir, { finalUsername, allMessages, ser
         }
         if (m.files && m.files.length) {
           txt += '\n      SAVED FILES\n';
-          for (const f of m.files) txt += '        [' + f.type + ']  ' + f.localPath + '\n';
+          for (const f of m.files) {
+            const messageLink = generateMessageLink(f.guildId || m.guildId, f.channelId || m.channelId, f.messageId || m.messageId);
+            txt += '        [' + f.type + ']  ' + f.localPath + '\n';
+            txt += '        Message: ' + messageLink + '\n';
+          }
         }
         txt += '\n';
       }
