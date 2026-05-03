@@ -19,7 +19,6 @@ async function discordAPI(apiPath) {
   });
 
   if (res.status === 429) {
-    // Lazy-require terminal here to avoid top-level circular dependency
     const { setCatMood } = require('./terminal');
 
     const rateLimitMessages = [
@@ -30,10 +29,13 @@ async function discordAPI(apiPath) {
       'tail tucked. dignity: minimal...',
       'contemplating every decision that led here...',
     ];
+
+    const waitMs = RATE_LIMIT_WAIT_MS;
+
     let rlMsgIdx  = 0;
     let rlMsgTick = 0;
     const RL_MSG_HOLD = 6;
-    const total = RATE_LIMIT_WAIT_MS / 1000;
+    const total = waitMs / 1000;
     const start = Date.now();
 
     setCatMood('sad');
@@ -49,20 +51,18 @@ async function discordAPI(apiPath) {
       }
     }, 500);
 
-    await delay(RATE_LIMIT_WAIT_MS);
+    await delay(waitMs);
     clearInterval(rlIv);
     setCatMood('hunting');
     statusLog('  ✓  timeout lifted — back on the trail...');
     return discordAPI(apiPath);
   }
 
-  // Guard against non-JSON responses (Cloudflare HTML error pages, etc.)
   const contentType = res.headers.get('content-type') || '';
   if (!contentType.includes('application/json')) {
     const body = await res.text();
     statusLog('  ✗  unexpected response (HTTP ' + res.status + ') — skipping this request');
     statusLog('     hint: ' + body.slice(0, 120).replace(/[\r\n]+/g, ' ').trim() + '...');
-    // Return a fake Discord error object so callers can check data.code and skip gracefully
     return { code: res.status, message: 'non-JSON response (HTTP ' + res.status + ')' };
   }
 
@@ -89,4 +89,22 @@ async function tryResolveFromAPI(userId) {
   return null;
 }
 
-module.exports = { discordAPI, tryResolveFromAPI, setToken, getToken };
+async function resolveProfile(userId) {
+  try {
+    const user = await discordAPI('/users/' + userId);
+    if (user && user.username && !user.code) {
+      const tag = user.discriminator && user.discriminator !== '0'
+        ? user.username + '#' + user.discriminator
+        : user.username;
+      return {
+        id:            user.id,
+        tag,
+        avatar:        user.avatar || null,
+        discriminator: user.discriminator || null,
+      };
+    }
+  } catch {}
+  return null;
+}
+
+module.exports = { discordAPI, tryResolveFromAPI, resolveProfile, setToken, getToken };

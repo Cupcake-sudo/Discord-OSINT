@@ -6,3 +6,4 @@ Mentions_*/
 _tmp_*/
 *.txt
 *.json
+*.env

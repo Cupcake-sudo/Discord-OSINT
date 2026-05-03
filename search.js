@@ -48,19 +48,21 @@ async function searchGuildForMentions(guildId, guildName, onTargetResolved, onPr
             const tag = formatUserTag(u);
             if (tag) { onTargetResolved(tag); targetResolved = true; }
           }
-          return { id: u.id, tag: formatUserTag(u) };
+          return { id: u.id, tag: formatUserTag(u), avatar: u.avatar || null };
         });
 
       collected.push({
-        messageId:     msg.id,
-        channelId:     msg.channel_id,
-        channelName:   stripEmoji(msg.channel && msg.channel.name ? msg.channel.name : null),
+        messageId:           msg.id,
+        channelId:           msg.channel_id,
+        channelName:         stripEmoji(msg.channel && msg.channel.name ? msg.channel.name : null),
         guildId,
-        guildName:     stripEmoji(guildName),
-        senderId:      msg.author && msg.author.id ? msg.author.id : null,
+        guildName:           stripEmoji(guildName),
+        senderId:            msg.author && msg.author.id ? msg.author.id : null,
         senderTag,
-        timestamp:     msg.timestamp,
-        content:       msg.content,
+        senderAvatar:        msg.author && msg.author.avatar ? msg.author.avatar : null,
+        senderDiscriminator: msg.author ? (msg.author.discriminator || null) : null,
+        timestamp:           msg.timestamp,
+        content:             msg.content,
         mentionedUsers,
       });
     }
@@ -137,9 +139,9 @@ async function searchGuildForFiles(guildId, guildName, filesDir, onFirstAuthor, 
           };
           const localPath = await downloadFile(f.url, filesDir, messageContext);
           if (localPath) {
-            localFiles.push({ 
-              localPath, 
-              type: f.type, 
+            localFiles.push({
+              localPath,
+              type: f.type,
               originalUrl: f.url,
               guildId: guildId,
               channelId: msg.channel_id,
@@ -150,12 +152,15 @@ async function searchGuildForFiles(guildId, guildName, filesDir, onFirstAuthor, 
         setCatMood('hunting');
       }
 
-      collected.push({ 
-        messageId: msg.id, 
-        timestamp: msg.timestamp, 
-        guildId: guildId,
-        channelId: msg.channel_id,
-        files: localFiles 
+      collected.push({
+        messageId:    msg.id,
+        timestamp:    msg.timestamp,
+        guildId:      guildId,
+        channelId:    msg.channel_id,
+        authorId:     msg.author && msg.author.id ? msg.author.id : null,
+        authorTag:    extractUsernameFromMessage(msg),
+        authorAvatar: msg.author && msg.author.avatar ? msg.author.avatar : null,
+        files:        localFiles,
       });
     }
 
@@ -224,9 +229,9 @@ async function searchGuildForUser(guildId, guildName, filesDir, onFirstAuthor, o
           };
           const localPath = await downloadFile(f.url, filesDir, messageContext);
           if (localPath) {
-            localFiles.push({ 
-              localPath, 
-              type: f.type, 
+            localFiles.push({
+              localPath,
+              type: f.type,
               originalUrl: f.url,
               guildId: guildId,
               channelId: msg.channel_id,
@@ -239,27 +244,30 @@ async function searchGuildForUser(guildId, guildName, filesDir, onFirstAuthor, o
 
       if (SAVE_MESSAGES) {
         collected.push({
-          messageId:   msg.id,
-          channelId:   msg.channel_id,
-          channelName: stripEmoji(msg.channel && msg.channel.name ? msg.channel.name : null),
+          messageId:    msg.id,
+          channelId:    msg.channel_id,
+          channelName:  stripEmoji(msg.channel && msg.channel.name ? msg.channel.name : null),
           guildId,
-          guildName:   stripEmoji(guildName),
-          authorId:    msg.author && msg.author.id ? msg.author.id : null,
-          authorTag:   extractUsernameFromMessage(msg),
-          timestamp:   msg.timestamp,
-          content:     msg.content,
-          attachments: (msg.attachments || []).map((a) => a.url),
-          embeds:      msg.embeds || [],
-          files:       localFiles,
-          type:        msg.type,
+          guildName:    stripEmoji(guildName),
+          authorId:     msg.author && msg.author.id ? msg.author.id : null,
+          authorTag:    extractUsernameFromMessage(msg),
+          authorAvatar: msg.author && msg.author.avatar ? msg.author.avatar : null,
+          timestamp:    msg.timestamp,
+          content:      msg.content,
+          attachments:  (msg.attachments || []).map((a) => a.url),
+          embeds:       msg.embeds || [],
+          files:        localFiles,
+          type:         msg.type,
         });
       } else if (localFiles.length > 0) {
-        collected.push({ 
-          messageId: msg.id, 
-          timestamp: msg.timestamp, 
-          guildId: guildId,
-          channelId: msg.channel_id,
-          files: localFiles 
+        collected.push({
+          messageId:    msg.id,
+          timestamp:    msg.timestamp,
+          guildId:      guildId,
+          channelId:    msg.channel_id,
+          authorId:     msg.author && msg.author.id ? msg.author.id : null,
+          authorAvatar: msg.author && msg.author.avatar ? msg.author.avatar : null,
+          files:        localFiles,
         });
       }
     }

@@ -3,11 +3,19 @@ const path = require('path');
 const { TARGET_USER_ID, DOWNLOAD_FILES, SAVE_MESSAGES } = require('./constants');
 const { modeLabel, stripEmoji, countFileTypes, fileTypeSummaryStr, generateMessageLink } = require('./utils');
 
-function writeMentionsOutput(outDir, { finalUsername, allMentions, serversWithMsgs, totalMentions }) {
+function writeMentionsOutput(outDir, { finalUsername, targetAvatar, allMentions, serversWithMsgs, totalMentions }) {
   const mentionerMap = {};
   for (const m of allMentions) {
     if (!m.senderId) continue;
-    if (!mentionerMap[m.senderId]) mentionerMap[m.senderId] = { id: m.senderId, tag: m.senderTag, count: 0, messages: [] };
+    if (!mentionerMap[m.senderId]) {
+      mentionerMap[m.senderId] = {
+        id:     m.senderId,
+        tag:    m.senderTag,
+        avatar: m.senderAvatar || null,
+        count:  0,
+        messages: [],
+      };
+    }
     mentionerMap[m.senderId].count++;
     mentionerMap[m.senderId].messages.push(m);
   }
@@ -15,8 +23,13 @@ function writeMentionsOutput(outDir, { finalUsername, allMentions, serversWithMs
   const mentioners = Object.values(mentionerMap).sort((a, b) => b.count - a.count);
 
   fs.writeFileSync(path.join(outDir, 'mentions.json'), JSON.stringify({
-    userId: TARGET_USER_ID, username: finalUsername, mode: modeLabel(),
-    total: totalMentions, mentioners, mentions: allMentions,
+    userId:       TARGET_USER_ID,
+    username:     finalUsername,
+    targetAvatar: targetAvatar || null,
+    mode:         modeLabel(),
+    total:        totalMentions,
+    mentioners,
+    mentions:     allMentions,
   }, null, 2));
 
   let txt = 'DISCORD OSINT — MENTIONS\n' + '═'.repeat(64) + '\n\n';
@@ -68,10 +81,14 @@ function writeMentionsOutput(outDir, { finalUsername, allMentions, serversWithMs
   return mentioners;
 }
 
-function writeMessagesOutput(outDir, filesDir, { finalUsername, allMessages, serversWithMsgs, totalFiles }) {
+function writeMessagesOutput(outDir, filesDir, { finalUsername, targetAvatar, allMessages, serversWithMsgs, totalFiles }) {
   fs.writeFileSync(path.join(outDir, 'messages.json'), JSON.stringify({
-    userId: TARGET_USER_ID, username: finalUsername, mode: modeLabel(),
-    total: allMessages.length, messages: allMessages,
+    userId:       TARGET_USER_ID,
+    username:     finalUsername,
+    targetAvatar: targetAvatar || null,
+    mode:         modeLabel(),
+    total:        allMessages.length,
+    messages:     allMessages,
   }, null, 2));
 
   let txt = 'DISCORD OSINT\n' + '═'.repeat(64) + '\n\n';

@@ -11,8 +11,6 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "node-fetch": "^2.7.0",
-    "puppeteer": "^24.41.0",
-    "puppeteer-core": "^24.41.0"
+    "node-fetch": "^2.7.0"
   }
 }

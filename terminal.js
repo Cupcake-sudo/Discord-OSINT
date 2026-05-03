@@ -78,6 +78,7 @@ function statusSet(msg) {
 function statusLog(msg) {
   process.stdout.write(SAVE_CURSOR);
   process.stdout.write(moveCursor(_outputLine, 1));
+  process.stdout.write(CLEAR_LINE);
   process.stdout.write(msg + '\n');
   _outputLine++;
   process.stdout.write(RESTORE_CURSOR);
@@ -185,6 +186,7 @@ async function printResults(rows, folderPath) {
   await catTypeLine('  ✓  Folder  →  ' + folderPath, { charDelay: 18 });
   _outputLine++;
 }
+
 async function printBanner() {
   const bannerLines = [
 '▐ ▄  ▄· ▄▌▐▄• ▄                                             ',
@@ -226,6 +228,19 @@ async function printBanner() {
   lockCatBelowBanner();
 }
 
+function _question(label) {
+  return new Promise((resolve) => {
+    process.stdout.write(SAVE_CURSOR);
+    process.stdout.write(moveCursor(_outputLine, 1));
+    process.stdout.write(CLEAR_LINE);
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    rl.question(label, (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
+}
+
 async function promptToken() {
   const idleMessages = [
     'nyx is waiting for a token...',
@@ -253,20 +268,74 @@ async function promptToken() {
     }
   }, 180);
 
-  const token = await new Promise((resolve) => {
-    process.stdout.write(SAVE_CURSOR);
-    process.stdout.write(moveCursor(_outputLine, 1));
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    rl.question('  » Input |Token| : ', (answer) => {
-      rl.close();
-      resolve(answer.trim());
-    });
-  });
+  const token = await _question('  » Input |Token| : ');
 
   clearInterval(rotateIv);
   process.stdout.write(RESTORE_CURSOR);
   statusSet('initializing...');
   return token;
+}
+
+async function promptUserId() {
+  setCatMood('hunting');
+  statusSet('nyx needs a target...');
+
+  while (true) {
+    const id = await _question('  » Target ID    : ');
+    if (/^\d{15,25}$/.test(id)) {
+      process.stdout.write(SAVE_CURSOR);
+      process.stdout.write(moveCursor(_outputLine, 1));
+      process.stdout.write(CLEAR_LINE);
+      process.stdout.write(RESTORE_CURSOR);
+      return id;
+    }
+    statusSet('that does not look like a discord id...');
+  }
+}
+
+async function promptMenu() {
+  setCatMood('idle');
+  statusSet('select an operation...');
+
+  statusLog('');
+  statusLog('   [1]  Messages');
+  statusLog('   [2]  Files');
+  statusLog('   [3]  Mentions');
+  statusLog('   [4]  All');
+  statusLog('');
+
+  const map = { '1': 'messages', '2': 'files', '3': 'mentions', '4': 'all' };
+
+  while (true) {
+    const ans = await _question('  » Operation    : ');
+    if (map[ans]) {
+      process.stdout.write(SAVE_CURSOR);
+      process.stdout.write(moveCursor(_outputLine, 1));
+      process.stdout.write(CLEAR_LINE);
+      process.stdout.write(RESTORE_CURSOR);
+      return map[ans];
+    }
+  }
+}
+
+async function promptYesNo(label) {
+  while (true) {
+    const ans = (await _question(label)).toLowerCase();
+    if (ans === 'y' || ans === 'yes') {
+      process.stdout.write(SAVE_CURSOR);
+      process.stdout.write(moveCursor(_outputLine, 1));
+      process.stdout.write(CLEAR_LINE);
+      process.stdout.write(RESTORE_CURSOR);
+      return true;
+    }
+    if (ans === 'n' || ans === 'no' || ans === '') {
+      process.stdout.write(SAVE_CURSOR);
+      process.stdout.write(moveCursor(_outputLine, 1));
+      process.stdout.write(CLEAR_LINE);
+      process.stdout.write(RESTORE_CURSOR);
+      return false;
+    }
+  }
 }
 
 function getOutputLine() { return _outputLine; }
@@ -289,6 +358,9 @@ module.exports = {
   finalizeOutput,
   printBanner,
   promptToken,
+  promptUserId,
+  promptMenu,
+  promptYesNo,
   printResults,
   catTypeLine,
   typeLine,

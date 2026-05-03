@@ -1,45 +1,7 @@
-const args = process.argv.slice(2);
-
-function getFlag(flag) {
-  const i = args.indexOf(flag);
-  return i !== -1 ? args[i + 1] : null;
-}
-
-function hasFlag(flag) {
-  return args.includes(flag);
-}
-
-const TARGET_USER_ID = getFlag('-id');
-
-if (!TARGET_USER_ID) {
-  console.error('\n  ✗  Missing required flag: -id <userID>\n');
-  console.error('  Usage:  node index.js -id <userID> [mode] [options]\n');
-  console.error('  Modes:');
-  console.error('    -messages   save every message (text) the user sent across all servers');
-  console.error('    -files      download every file, image, videos, gifs. Everything | exiftool ;)');
-  console.error('    -mention    find every message that pings them and track who sent it');
-  console.error('    -all        everything — messages, files, and mentions together');
-  console.error('\n  Options:');
-  console.error('    -heatmap    show top 5 peak 2-hour messaging windows (not available with -mention)');
-  console.error('\n  Default (no mode): same as -messages\n');
-  process.exit(1);
-}
-
-const MODE_ALL      = hasFlag('-all');
-const MODE_MESSAGES = hasFlag('-messages');
-const MODE_FILES    = hasFlag('-files');
-const MODE_MENTION  = hasFlag('-mentions');
-const MODE_HEATMAP  = hasFlag('-heatmap') && !MODE_MENTION;
-
-const DOWNLOAD_FILES    = MODE_ALL || MODE_FILES;
-const SAVE_MESSAGES     = MODE_ALL || MODE_MESSAGES || (!MODE_MESSAGES && !MODE_FILES && !MODE_MENTION);
-const FILES_ONLY_MODE   = MODE_FILES   && !MODE_ALL && !MODE_MESSAGES && !MODE_MENTION;
-const MENTION_ONLY_MODE = MODE_MENTION && !MODE_ALL && !MODE_MESSAGES && !MODE_FILES;
-
 const HAS_FILTERS        = ['image', 'video', 'file', 'embed', 'sticker', 'sound'];
 const SYSTEM_TZ          = Intl.DateTimeFormat().resolvedOptions().timeZone;
 const SEARCH_DELAY_MS    = 1500;
-const RATE_LIMIT_WAIT_MS = 60 * 2000;
+const RATE_LIMIT_WAIT_MS = 150000;
 const PAGE_SIZE          = 25;
 
 const HIDE_CURSOR    = '\x1b[?25l';
@@ -57,7 +19,7 @@ const CAT_FACES = {
   sleepy:  ['(=^ -ω- ^=)', '(=^ ˘ω˘ ^=)', '(=^ ᴖωᴖ ^=)', '(=^ zzZ  ^=)'],
   happy:   ['(=^ ≧ω≦ ^=)', '(=^ ^ω^ ^=)', '(=^ ᵔωᵔ ^=)', '(=^ ♡ω♡ ^=)'],
 };
-const CAT_FRAMES = CAT_FACES.idle; // legacy alias
+const CAT_FRAMES = CAT_FACES.idle;
 
 const BANNER_COLOURS = [
   '\x1b[38;5;99m',
@@ -84,31 +46,51 @@ const EXT_BUCKETS = {
   doc:   ['pdf','doc','docx','xls','xlsx','ppt','pptx','txt','csv','zip','rar','7z'],
 };
 
-module.exports = {
-  TARGET_USER_ID,
-  MODE_ALL,
-  MODE_MESSAGES,
-  MODE_FILES,
-  MODE_MENTION,
-  MODE_HEATMAP,
-  DOWNLOAD_FILES,
-  SAVE_MESSAGES,
-  FILES_ONLY_MODE,
-  MENTION_ONLY_MODE,
-  HAS_FILTERS,
-  SYSTEM_TZ,
-  SEARCH_DELAY_MS,
-  RATE_LIMIT_WAIT_MS,
-  PAGE_SIZE,
-  HIDE_CURSOR,
-  SHOW_CURSOR,
-  CLEAR_LINE,
-  SAVE_CURSOR,
-  RESTORE_CURSOR,
-  RESET,
-  CAT_FRAMES,
-  CAT_FACES,
-  BANNER_COLOURS,
-  GLITCH_CHARS,
-  EXT_BUCKETS,
+const m = module.exports;
+
+m.HAS_FILTERS        = HAS_FILTERS;
+m.SYSTEM_TZ          = SYSTEM_TZ;
+m.SEARCH_DELAY_MS    = SEARCH_DELAY_MS;
+m.RATE_LIMIT_WAIT_MS = RATE_LIMIT_WAIT_MS;
+m.PAGE_SIZE          = PAGE_SIZE;
+m.HIDE_CURSOR        = HIDE_CURSOR;
+m.SHOW_CURSOR        = SHOW_CURSOR;
+m.CLEAR_LINE         = CLEAR_LINE;
+m.SAVE_CURSOR        = SAVE_CURSOR;
+m.RESTORE_CURSOR     = RESTORE_CURSOR;
+m.RESET              = RESET;
+m.CAT_FACES          = CAT_FACES;
+m.CAT_FRAMES         = CAT_FRAMES;
+m.BANNER_COLOURS     = BANNER_COLOURS;
+m.GLITCH_CHARS       = GLITCH_CHARS;
+m.EXT_BUCKETS        = EXT_BUCKETS;
+
+m.TARGET_USER_ID    = null;
+m.MODE_ALL          = false;
+m.MODE_MESSAGES     = false;
+m.MODE_FILES        = false;
+m.MODE_MENTION      = false;
+m.MODE_HEATMAP      = false;
+m.DOWNLOAD_FILES    = false;
+m.SAVE_MESSAGES     = false;
+m.FILES_ONLY_MODE   = false;
+m.MENTION_ONLY_MODE = false;
+
+m.configure = function (opts) {
+  const MODE_ALL      = !!opts.MODE_ALL;
+  const MODE_MESSAGES = !!opts.MODE_MESSAGES;
+  const MODE_FILES    = !!opts.MODE_FILES;
+  const MODE_MENTION  = !!opts.MODE_MENTION;
+  const MODE_HEATMAP  = !!opts.MODE_HEATMAP && !MODE_MENTION;
+
+  m.TARGET_USER_ID    = opts.TARGET_USER_ID || null;
+  m.MODE_ALL          = MODE_ALL;
+  m.MODE_MESSAGES     = MODE_MESSAGES;
+  m.MODE_FILES        = MODE_FILES;
+  m.MODE_MENTION      = MODE_MENTION;
+  m.MODE_HEATMAP      = MODE_HEATMAP;
+  m.DOWNLOAD_FILES    = MODE_ALL || MODE_FILES;
+  m.SAVE_MESSAGES     = MODE_ALL || MODE_MESSAGES || (!MODE_MESSAGES && !MODE_FILES && !MODE_MENTION);
+  m.FILES_ONLY_MODE   = MODE_FILES   && !MODE_ALL && !MODE_MESSAGES && !MODE_MENTION;
+  m.MENTION_ONLY_MODE = MODE_MENTION && !MODE_ALL && !MODE_MESSAGES && !MODE_FILES;
 };
