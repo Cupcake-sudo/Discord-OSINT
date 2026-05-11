@@ -84,13 +84,17 @@ async function resolveProfile(userId) {
       let mutualFriendsCount  = null;
       let bio                 = null;
       try {
-        const prof = await discordAPI(
-          '/users/' + userId + '/profile?with_mutual_guilds=true&with_mutual_friends_count=true'
+        const profRes = await fetch(
+          'https://discord.com/api/v9/users/' + userId + '/profile?with_mutual_guilds=true&with_mutual_friends_count=true',
+          { headers: { Authorization: DISCORD_TOKEN.replace(/^"|"$/g, '') } }
         );
-        if (prof && !prof.code) {
-          mutualGuilds       = prof.mutual_guilds       || [];
-          mutualFriendsCount = prof.mutual_friends_count ?? null;
-          bio                = prof.user_profile?.bio   || null;
+        if (profRes.ok) {
+          const prof = await profRes.json();
+          if (prof && !prof.code) {
+            mutualGuilds       = prof.mutual_guilds       || [];
+            mutualFriendsCount = prof.mutual_friends_count ?? null;
+            bio                = prof.user_profile?.bio   || null;
+          }
         }
       } catch {}
 
