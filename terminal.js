@@ -382,26 +382,8 @@ async function promptServerSelect(guilds) {
 
   const listStart = _outputLine;
   statusLog('');
-
-  const ROWS     = 5;
-  const padNum   = String(guilds.length).length;
-  const maxName  = Math.min(30, Math.max(...guilds.map(g => (g.name || g.id).length)));
-  const colWidth = 3 + padNum + 2 + 2 + maxName; // "   [N]  name"
-  const termW    = process.stdout.columns || 120;
-  const maxCols  = Math.max(1, Math.floor(termW / colWidth));
-  const numRows  = Math.min(ROWS, guilds.length);
-  const numCols  = Math.min(Math.ceil(guilds.length / numRows), maxCols);
-
-  for (let row = 0; row < numRows; row++) {
-    let line = '';
-    for (let col = 0; col < numCols; col++) {
-      const idx = col * numRows + row;
-      if (idx >= guilds.length) break;
-      const name  = (guilds[idx].name || guilds[idx].id).slice(0, maxName);
-      const label = '[' + String(idx + 1).padStart(padNum) + ']';
-      line += ('   ' + label + '  ' + name).padEnd(colWidth + 2);
-    }
-    statusLog(line.trimEnd());
+  for (let i = 0; i < guilds.length; i++) {
+    statusLog('   [' + (i + 1) + ']  ' + (guilds[i].name || guilds[i].id));
   }
   statusLog('');
 
@@ -432,7 +414,6 @@ async function promptMenu() {
   statusLog('   [1]  Messages');
   statusLog('   [2]  Files');
   statusLog('   [3]  Mentions');
-  statusLog('');
   statusLog('   [4]  All');
   statusLog('');
 
