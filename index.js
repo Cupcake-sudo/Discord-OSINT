@@ -96,10 +96,10 @@ async function main() {
 
   async function showTargetProfile(usernameOverride) {
     if (profileShown) return;
-    profileShown = true;
     const prof = await resolveProfile(TARGET_USER_ID);
     const tag  = prof ? prof.tag : (usernameOverride || null);
     if (!tag) return;
+    profileShown = true;
     term.statusLog('  target identified:  ' + tag);
     if (prof && prof.displayName && prof.displayName !== prof.username) {
       term.statusLog('  display name:        ' + prof.displayName);
