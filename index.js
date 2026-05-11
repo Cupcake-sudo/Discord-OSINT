@@ -105,6 +105,11 @@ async function main() {
     }
     term.statusLog('  username:            ' + profile.username);
     if (profile.createdAt) term.statusLog('  joined discord:      ' + formatSnowflakeDate(TARGET_USER_ID));
+    if (profile.bio) term.statusLog('  bio:                 ' + profile.bio.replace(/\n/g, ' ').slice(0, 80));
+    if (profile.mutualFriendsCount !== null) term.statusLog('  mutual friends:      ' + profile.mutualFriendsCount);
+    if (profile.mutualGuilds && profile.mutualGuilds.length > 0) {
+      term.statusLog('  mutual servers:      ' + profile.mutualGuilds.length);
+    }
   }
 
   const tmpDir = '_tmp_' + TARGET_USER_ID;

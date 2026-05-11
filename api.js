@@ -79,13 +79,31 @@ async function resolveProfile(userId) {
         ? user.username + '#' + user.discriminator
         : user.username;
       const createdMs = Number(BigInt(userId) >> 22n) + 1420070400000;
+
+      let mutualGuilds        = [];
+      let mutualFriendsCount  = null;
+      let bio                 = null;
+      try {
+        const prof = await discordAPI(
+          '/users/' + userId + '/profile?with_mutual_guilds=true&with_mutual_friends_count=true'
+        );
+        if (prof && !prof.code) {
+          mutualGuilds       = prof.mutual_guilds       || [];
+          mutualFriendsCount = prof.mutual_friends_count ?? null;
+          bio                = prof.user_profile?.bio   || null;
+        }
+      } catch {}
+
       return {
-        id:          user.id,
+        id:                 user.id,
         tag,
-        displayName: user.global_name || null,
-        username:    user.username,
-        avatar:      user.avatar || null,
-        createdAt:   new Date(createdMs),
+        displayName:        user.global_name || null,
+        username:           user.username,
+        avatar:             user.avatar      || null,
+        createdAt:          new Date(createdMs),
+        mutualGuilds,
+        mutualFriendsCount,
+        bio,
       };
     }
   } catch {}
