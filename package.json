@@ -11,8 +11,6 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "debug": "^4.4.3",
-    "discord.js-selfbot-v13": "^3.7.1",
     "node-fetch": "^2.7.0"
   }
 }
