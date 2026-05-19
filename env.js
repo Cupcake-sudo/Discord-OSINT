@@ -23,4 +23,9 @@ function loadEnv() {
   return out;
 }
 
-module.exports = { loadEnv };
+function saveEnv(token) {
+  const file = path.join(process.cwd(), '.env');
+  fs.writeFileSync(file, 'Token=' + token + '\n', 'utf8');
+}
+
+module.exports = { loadEnv, saveEnv };

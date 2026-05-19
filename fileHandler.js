@@ -80,12 +80,12 @@ function moveTmpFiles(tmpDir, filesDir) {
         const fileDst = path.join(dst, file);
         if (!fs.existsSync(fileDst)) fs.renameSync(fileSrc, fileDst);
       }
-      fs.rmdirSync(src);
+      fs.rmSync(src, { recursive: true, force: true });
     } else {
       if (!fs.existsSync(dst)) fs.renameSync(src, dst);
     }
   }
-  fs.rmdirSync(tmpDir);
+  fs.rmSync(tmpDir, { recursive: true, force: true });
 }
 
 module.exports = { downloadFile, ensureDir, moveTmpFiles };

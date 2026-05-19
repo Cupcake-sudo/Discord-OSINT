@@ -1,6 +1,6 @@
 async function main() {
   const term         = require('./terminal');
-  const { loadEnv }  = require('./env');
+  const { loadEnv, saveEnv }  = require('./env');
   const { setToken, discordAPI } = require('./api');
 
   term.clearScreen();
@@ -9,6 +9,7 @@ async function main() {
   await term.printBanner();
 
   const env = loadEnv();
+  const hasEnvFile = require('fs').existsSync(require('path').join(process.cwd(), '.env'));
   let token = null;
   if (env.Token && env.Token.length) {
     token = env.Token.trim();
@@ -52,7 +53,15 @@ async function main() {
 
   // action === 'scan'
   if (!token) {
-    token = await term.promptToken();
+    const noEnv = !hasEnvFile;
+    const envMsgLine = noEnv ? term.getOutputLine() : null;
+    token = await term.promptToken({ createEnv: noEnv });
+    if (noEnv) {
+      saveEnv(token);
+      term.statusLog('  .env created        ✓');
+      await term.delay(900);
+      term.clearLinesFrom(envMsgLine);
+    }
     setToken(token);
     term.statusSet('checking token...');
     const me = await discordAPI('/users/@me');
@@ -84,11 +93,6 @@ async function main() {
 
   const op = await term.promptMenu();
 
-  let heatmap = false;
-  if (op !== 'mentions') {
-    heatmap = await term.promptYesNo('  » Heatmap?      [y/n] : ');
-  }
-
   term.clearLinesFrom(setupLine);
 
   const constants = require('./constants');
@@ -98,7 +102,7 @@ async function main() {
     MODE_MESSAGES:  op === 'messages',
     MODE_FILES:     op === 'files',
     MODE_MENTION:   op === 'mentions',
-    MODE_HEATMAP:   heatmap,
+    MODE_HEATMAP:   op !== 'mentions',
   });
 
   const fs   = require('fs');
@@ -177,11 +181,14 @@ async function main() {
     if (prof && prof.mutualFriendsCount !== null) term.statusLog('  mutual friends:      ' + prof.mutualFriendsCount);
     if (prof && prof.mutualGuilds && prof.mutualGuilds.length > 0) {
       term.statusLog('  mutual servers:      ' + prof.mutualGuilds.length);
-      for (const mg of prof.mutualGuilds) {
+      const shown     = prof.mutualGuilds.slice(0, 5);
+      const remaining = prof.mutualGuilds.length - shown.length;
+      for (const mg of shown) {
         const g    = guilds.find(x => x.id === mg.id);
         const name = g ? (stripEmoji(g.name) || mg.id) : mg.id;
         term.statusLog('    ·  ' + name + (mg.nick ? '  (nick: ' + mg.nick + ')' : ''));
       }
+      if (remaining > 0) term.statusLog('    &  ' + remaining + ' more');
     }
     if (prof && prof.connectedAccounts && prof.connectedAccounts.length > 0) {
       for (const acc of prof.connectedAccounts) {
@@ -210,11 +217,11 @@ async function main() {
   const summary     = [];
 
   function modeDisplay() {
-    if (MODE_ALL)      return 'All' + (MODE_HEATMAP ? ' + Heatmap' : '');
-    if (MODE_MESSAGES) return 'Messages' + (MODE_HEATMAP ? ' + Heatmap' : '');
-    if (MODE_FILES)    return 'Files' + (MODE_HEATMAP ? ' + Heatmap' : '');
+    if (MODE_ALL)      return 'All';
+    if (MODE_MESSAGES) return 'Messages';
+    if (MODE_FILES)    return 'Files';
     if (MODE_MENTION)  return 'Mentions';
-    return 'All' + (MODE_HEATMAP ? ' + Heatmap' : '');
+    return 'All';
   }
 
   function unitFor() {

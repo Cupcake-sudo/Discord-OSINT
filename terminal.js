@@ -90,18 +90,10 @@ function setCatMood(mood) {
 }
 
 function updateHeader() {
-  if (_catLine === null) return;
-  const faces  = CAT_FACES[_catMood] || CAT_FACES.idle;
-  const c      = faces[_catFrame % faces.length];
-  const col    = BANNER_COLOURS[_catFrame % BANNER_COLOURS.length];
-  const catW   = stripAnsi(c).length;
-  const bar    = '─'.repeat(catW);
-  const maxMsgLen = Math.max(10, (process.stdout.columns || 80) - catW - 10);
-  const safeMsg   = String(_statusMsg).replace(/[\r\n]/g, ' ').slice(0, maxMsgLen);
+  if (_catLine === null && !_bannerPrinted) return;
 
   let out = SAVE_CURSOR;
 
-  // cycle banner colours in sync with the cat
   if (_bannerPrinted) {
     let row = _bannerStartLine;
     let pos = 0;
@@ -120,12 +112,22 @@ function updateHeader() {
     }
   }
 
-  out +=
-    moveCursor(_catSepAbove, 1) + CLEAR_LINE + '  ' + col + '╭' + bar + '╮' + RESET +
-    moveCursor(_catLine,     1) + CLEAR_LINE + '  ' + col + '│' + c + '│' + RESET + '  ' + DIM + safeMsg + RESET +
-    moveCursor(_catSepBelow, 1) + CLEAR_LINE + '  ' + col + '╰' + bar + '╯' + RESET +
-    RESTORE_CURSOR;
+  if (_catLine !== null) {
+    const faces  = CAT_FACES[_catMood] || CAT_FACES.idle;
+    const c      = faces[_catFrame % faces.length];
+    const col    = BANNER_COLOURS[_catFrame % BANNER_COLOURS.length];
+    const catW   = stripAnsi(c).length;
+    const bar    = '─'.repeat(catW);
+    const maxMsgLen = Math.max(10, (process.stdout.columns || 80) - catW - 10);
+    const safeMsg   = String(_statusMsg).replace(/[\r\n]/g, ' ').slice(0, maxMsgLen);
 
+    out +=
+      moveCursor(_catSepAbove, 1) + CLEAR_LINE + '  ' + col + '╭' + bar + '╮' + RESET +
+      moveCursor(_catLine,     1) + CLEAR_LINE + '  ' + col + '│' + c + '│' + RESET + '  ' + DIM + safeMsg + RESET +
+      moveCursor(_catSepBelow, 1) + CLEAR_LINE + '  ' + col + '╰' + bar + '╯' + RESET;
+  }
+
+  out += RESTORE_CURSOR;
   process.stdout.write(out);
   _catFrame++;
 }
@@ -339,11 +341,14 @@ async function printBanner() {
   }
 
   _outputLine++;
+  _bannerPrinted = true;
+  if (!_headerIv) {
+    _headerIv = setInterval(() => updateHeader(), 150);
+  }
   await glitchType('~ harvest  ·  analyze  ·  profile ~', { charDelay: 5, glitches: 4 });
   process.stdout.write(SAVE_CURSOR + moveCursor(_outputLine, 1) + CLEAR_LINE + DIM + '─'.repeat(36) + RESET + RESTORE_CURSOR);
   _outputLine++;
   lockCatBelowBanner();
-  _bannerPrinted = true;
 }
 
 function _question(label) {
@@ -359,7 +364,13 @@ function _question(label) {
   });
 }
 
-async function promptToken() {
+async function promptToken({ createEnv = false } = {}) {
+  if (createEnv) {
+    statusLog('');
+    statusLog('  no .env — your token will be saved');
+    statusLog('');
+  }
+
   const idleMessages = [
     'nyx is waiting for a token...',
     'tail flicking impatiently...',
@@ -377,6 +388,8 @@ async function promptToken() {
   let msgTick = 0;
   const MSG_HOLD = 20;
 
+  statusSet(createEnv ? 'creating .env — enter your discord token...' : idleMessages[0]);
+
   const rotateIv = setInterval(() => {
     msgTick++;
     if (msgTick >= MSG_HOLD) {
@@ -386,7 +399,8 @@ async function promptToken() {
     }
   }, 180);
 
-  const token = await _question('  » Input |Token| : ');
+  const label = createEnv ? '  » Token (saved to .env) : ' : '  » Input |Token| : ';
+  const token = await _question(label);
 
   clearInterval(rotateIv);
   process.stdout.write(RESTORE_CURSOR);
